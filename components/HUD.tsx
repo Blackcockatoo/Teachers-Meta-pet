@@ -1,40 +1,14 @@
-import { useStore } from '@/store/guardian';
+
+import { useStore } from '@/lib/store';
 import { UtensilsCrossed, Sparkles, Droplets, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from './ui/button';
 
-interface HUDProps {
-  onFeed?: () => void;
-  onClean?: () => void;
-  onPlay?: () => void;
-  onSleep?: () => void;
-}
-
-export function HUD({ onFeed, onClean, onPlay, onSleep }: HUDProps = {}) {
+export function HUD() {
   const vitals = useStore(s => s.vitals);
   const feed = useStore(s => s.feed);
   const clean = useStore(s => s.clean);
   const play = useStore(s => s.play);
   const sleep = useStore(s => s.sleep);
-
-  const handleFeed = () => {
-    feed();
-    onFeed?.();
-  };
-
-  const handleClean = () => {
-    clean();
-    onClean?.();
-  };
-
-  const handlePlay = () => {
-    play();
-    onPlay?.();
-  };
-
-  const handleSleep = () => {
-    sleep();
-    onSleep?.();
-  };
 
   return (
     <div className="space-y-6">
@@ -66,19 +40,19 @@ export function HUD({ onFeed, onClean, onPlay, onSleep }: HUDProps = {}) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <Button onClick={handleFeed} className="gap-2">
+        <Button onClick={feed} className="gap-2">
           <UtensilsCrossed className="w-4 h-4" />
           Feed
         </Button>
-        <Button onClick={handleClean} variant="secondary" className="gap-2">
+        <Button onClick={clean} variant="secondary" className="gap-2">
           <Droplets className="w-4 h-4" />
           Clean
         </Button>
-        <Button onClick={handlePlay} variant="outline" className="gap-2">
+        <Button onClick={play} variant="outline" className="gap-2">
           <Sparkles className="w-4 h-4" />
           Play
         </Button>
-        <Button onClick={handleSleep} variant="ghost" className="gap-2">
+        <Button onClick={sleep} variant="ghost" className="gap-2">
           <Zap className="w-4 h-4" />
           Sleep
         </Button>

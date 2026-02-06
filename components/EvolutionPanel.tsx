@@ -1,148 +1,235 @@
 'use client';
 
-import { useStore } from '@/store/guardian';
-import { calculateTrinityAspect, calculateEvolutionTrait, calculateEvolutionPower, type TrinityAspect } from '@/systems/evolution';
-import { Sparkles, Zap, TrendingUp } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+
+import { useStore } from '@/lib/store';
+import {
+  getEvolutionProgress,
+  getTimeUntilNextEvolution,
+  getNextEvolutionRequirement,
+  getRequirementProgress,
+  EVOLUTION_STAGE_INFO,
+  EVOLUTION_VISUALS,
+  type EvolutionState,
+} from '@/lib/evolution';
+import { Zap, Clock, TrendingUp, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
+
 import { Button } from './ui/button';
 
-interface EvolutionPanelProps {
-  genome: { red60: number; blue60: number; black60: number };
-  onEvolve?: () => void;
-}
+type StageSequence = readonly EvolutionState[];
 
-const STAGE_NAMES = ['GENETICS', 'NEURO', 'QUANTUM', 'SPECIATION'] as const;
+const STAGE_SEQUENCE: StageSequence = ['GENETICS', 'NEURO', 'QUANTUM', 'SPECIATION'];
 
-const ASPECT_COLORS: Record<TrinityAspect, string> = {
-  sun: '#FFD700',
-  shadow: '#8B5CF6',
-  void: '#1A1A1A',
-};
-
-export function EvolutionPanel({ genome, onEvolve }: EvolutionPanelProps) {
+export function EvolutionPanel() {
   const evolution = useStore(state => state.evolution);
-  const evolve = useStore(state => state.evolve);
+  const vitals = useStore(state => state.vitals);
+  const tryEvolve = useStore(state => state.tryEvolve);
 
-  const trinityAspect = calculateTrinityAspect(genome);
-  const evolutionTrait = calculateEvolutionTrait(genome, trinityAspect, null);
-  const evolutionPower = calculateEvolutionPower(genome);
+  const vitalsAverage = useMemo(
+    () => (vitals.hunger + vitals.hygiene + vitals.mood + vitals.energy) / 4,
+    [vitals.energy, vitals.hunger, vitals.hygiene, vitals.mood]
+  );
 
-  const currentStageIndex = STAGE_NAMES.indexOf(evolution.stage);
-  const canEvolve = currentStageIndex < STAGE_NAMES.length - 1;
+  const stageIndex = useMemo(
+    () => STAGE_SEQUENCE.indexOf(evolution.state),
+    [evolution.state]
+  );
 
-  const handleEvolve = () => {
-    const success = evolve();
-    if (success && onEvolve) {
-      onEvolve();
+  const visuals = EVOLUTION_VISUALS[evolution.state];
+  const stageInfo = EVOLUTION_STAGE_INFO[evolution.state];
+
+  const progress = useMemo(
+    () => getEvolutionProgress(evolution, vitalsAverage),
+    [evolution, vitalsAverage]
+  );
+
+  const timeRemaining = useMemo(
+    () => getTimeUntilNextEvolution(evolution),
+    [evolution]
+  );
+
+  const requirementSnapshot = useMemo(
+    () => getNextEvolutionRequirement(evolution),
+    [evolution]
+  );
+
+  const requirementProgress = useMemo(
+    () =>
+      requirementSnapshot
+        ? getRequirementProgress(evolution, vitalsAverage, requirementSnapshot)
+        : null,
+    [evolution, vitalsAverage, requirementSnapshot]
+  );
+
+  const nextStageInfo = requirementSnapshot ? EVOLUTION_STAGE_INFO[requirementSnapshot.state] : null;
+
+  const formatDuration = useCallback((milliseconds: number) => {
+    if (milliseconds < 0) return 'Max level';
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      return `${days}d ${remainingHours}h`;
     }
-  };
 
-  const aspectColor = ASPECT_COLORS[trinityAspect];
+    return `${hours}h ${minutes}m`;
+  }, []);
+
+  const handleEvolve = useCallback(() => {
+    const evolved = tryEvolve();
+    if (evolved) {
+      const targetStage = requirementSnapshot?.state ?? evolution.state;
+      console.info('[evolution] advanced to', targetStage);
+    }
+  }, [evolution.state, requirementSnapshot, tryEvolve]);
+
+  const experiencePercent = Math.round(evolution.experience);
+  const nextStageLabel = stageIndex >= 0 ? `Evolution Stage ${stageIndex + 1}/${STAGE_SEQUENCE.length}` : 'Evolution';
+  const accent = visuals.colors[1] ?? visuals.colors[0];
+  const tertiary = visuals.colors[visuals.colors.length - 1] ?? visuals.colors[0];
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <header className="text-center space-y-2">
         <div
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full border-2"
           style={{
-            borderColor: aspectColor,
-            backgroundColor: `${aspectColor}20`,
+            borderColor: visuals.colors[0],
+            backgroundColor: `${visuals.colors[0]}20`,
           }}
         >
-          <Sparkles className="w-4 h-4" style={{ color: aspectColor }} />
-          <span className="font-bold text-white text-lg">{evolution.stage}</span>
+          <Sparkles className="w-4 h-4" style={{ color: visuals.colors[0] }} />
+          <span className="font-bold text-white text-lg">{evolution.state}</span>
         </div>
-        <p className="text-slate-400 text-sm">Stage {currentStageIndex + 1}/{STAGE_NAMES.length}</p>
-        <p className="text-slate-300 text-xs capitalize">{evolutionTrait} • {trinityAspect} aspect</p>
+        <p className="text-zinc-400 text-sm">{nextStageLabel}</p>
+        <p className="text-zinc-300 text-xs">{stageInfo.tagline}</p>
       </header>
 
-      {/* Stats Grid */}
       <section className="grid grid-cols-2 gap-3 text-sm">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 space-y-2">
-          <div className="flex items-center gap-2 text-slate-400">
+        <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 space-y-2">
+          <div className="flex items-center gap-2 text-zinc-400">
             <TrendingUp className="w-4 h-4" />
-            <span>Power</span>
+            <span>Experience</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div className="flex-1 h-2 bg-zinc-700 rounded-full overflow-hidden">
               <div
                 className="h-full transition-all duration-300"
                 style={{
-                  width: `${evolutionPower}%`,
-                  backgroundColor: aspectColor,
+                  width: `${experiencePercent}%`,
+                  backgroundColor: visuals.colors[0],
                 }}
               />
             </div>
-            <span className="text-white font-medium">{Math.round(evolutionPower)}</span>
+            <span className="text-white font-medium">{experiencePercent}%</span>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 space-y-2">
-          <div className="flex items-center gap-2 text-slate-400">
+        <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 space-y-2">
+          <div className="flex items-center gap-2 text-zinc-400">
             <Zap className="w-4 h-4" />
-            <span>Evolutions</span>
+            <span>Interactions</span>
           </div>
-          <div className="text-white font-medium text-lg">{evolution.totalEvolutions}</div>
+          <div className="text-white font-medium text-lg">{evolution.totalInteractions}</div>
         </div>
       </section>
 
-      {/* Trinity Genome */}
-      <section className="bg-slate-900/40 border border-slate-800 rounded-lg p-4 space-y-3">
-        <p className="text-white font-semibold text-sm">Genome Trinity</p>
-        <div className="space-y-2">
-          <GenomeBar label="Sun (Red)" value={genome.red60} color="#FF4444" />
-          <GenomeBar label="Shadow (Blue)" value={genome.blue60} color="#4444FF" />
-          <GenomeBar label="Void (Black)" value={genome.black60} color="#444444" />
-        </div>
-      </section>
+      {evolution.state !== 'SPECIATION' && (
+        <section className="space-y-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-zinc-400">Next evolution</span>
+            <span className="text-white font-medium">{Math.round(progress)}%</span>
+          </div>
+          <div className="h-3 bg-zinc-800 rounded-full overflow-hidden border border-zinc-700">
+            <div
+              className="h-full transition-all duration-500"
+              style={{
+                width: `${progress}%`,
+                background: `linear-gradient(to right, ${visuals.colors[0]}, ${accent})`,
+              }}
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <Clock className="w-3 h-3" />
+            <span>Time remaining: {formatDuration(timeRemaining)}</span>
+          </div>
+        </section>
+      )}
 
-      {/* Evolution Info */}
-      <section className="bg-slate-900/30 border border-slate-800 rounded-lg p-4 space-y-3 text-xs text-slate-300">
+      {requirementSnapshot && requirementProgress && (
+        <section className="bg-zinc-900/40 border border-zinc-800 rounded-lg p-4 space-y-3 text-sm">
+          <div className="flex items-center justify-between text-xs text-zinc-400">
+            <span>Next Stage: {requirementSnapshot.state}</span>
+            <span>{EVOLUTION_STAGE_INFO[requirementSnapshot.state].title}</span>
+          </div>
+          <div className="space-y-3 text-xs">
+            <RequirementBar
+              label="Age"
+              value={requirementProgress.ageProgress}
+              helper={formatRequirementValue(
+                Date.now() - evolution.lastEvolutionTime,
+                requirementSnapshot.requirements.minAge,
+                'time',
+                formatDuration
+              )}
+              color={visuals.colors[0]}
+            />
+            <RequirementBar
+              label="Interactions"
+              value={requirementProgress.interactionsProgress}
+              helper={formatRequirementValue(
+                evolution.totalInteractions,
+                requirementSnapshot.requirements.minInteractions,
+                'number'
+              )}
+              color={accent}
+            />
+            <RequirementBar
+              label="Vitals avg"
+              value={requirementProgress.vitalsProgress}
+              helper={formatRequirementValue(
+                vitalsAverage,
+                requirementSnapshot.requirements.minVitalsAverage,
+                'number'
+              )}
+              color={tertiary}
+            />
+            {requirementSnapshot.requirements.specialDescription && (
+              <div className="flex items-start gap-2 text-xs">
+                {requirementProgress.specialMet ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-amber-300" />
+                )}
+                <span className="text-zinc-400">{requirementSnapshot.requirements.specialDescription}</span>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section className="bg-zinc-900/30 border border-zinc-800 rounded-lg p-4 space-y-3 text-xs text-zinc-300">
         <p className="font-semibold text-white text-sm">Stage Focus</p>
         <ul className="list-disc list-inside space-y-1">
-          {evolution.stage === 'GENETICS' && (
-            <>
-              <li>Base genome expression</li>
-              <li>Learning fundamental behaviors</li>
-              <li>Building initial bond</li>
-            </>
-          )}
-          {evolution.stage === 'NEURO' && (
-            <>
-              <li>Enhanced consciousness</li>
-              <li>Complex behavior patterns</li>
-              <li>Advanced AI responses</li>
-            </>
-          )}
-          {evolution.stage === 'QUANTUM' && (
-            <>
-              <li>Non-local awareness</li>
-              <li>Spontaneous insights</li>
-              <li>Dream generation</li>
-            </>
-          )}
-          {evolution.stage === 'SPECIATION' && (
-            <>
-              <li>Unique species emergence</li>
-              <li>Maximum differentiation</li>
-              <li>Breeding unlocked</li>
-            </>
-          )}
+          {stageInfo.focus.map(item => (
+            <li key={item}>{item}</li>
+          ))}
         </ul>
       </section>
 
-      {/* Evolve Button */}
-      {canEvolve && (
+      {evolution.canEvolve && evolution.state !== 'SPECIATION' && (
         <section className="space-y-3">
           <div className="bg-emerald-500/10 border border-emerald-500/40 text-emerald-100 text-xs rounded-lg px-3 py-2">
-            Ready to evolve to {STAGE_NAMES[currentStageIndex + 1]}!
+            {nextStageInfo ? nextStageInfo.celebration : stageInfo.celebration}
           </div>
           <Button
             onClick={handleEvolve}
             className="w-full gap-2 font-bold text-lg"
             style={{
-              background: `linear-gradient(135deg, ${aspectColor}, #4ECDC4)`,
-              boxShadow: `0 0 20px ${aspectColor}50`,
+              background: `linear-gradient(135deg, ${visuals.colors[0]}, ${accent})`,
+              boxShadow: `0 0 20px ${visuals.colors[0]}50`,
             }}
           >
             <Sparkles className="w-5 h-5" />
@@ -151,43 +238,69 @@ export function EvolutionPanel({ genome, onEvolve }: EvolutionPanelProps) {
         </section>
       )}
 
-      {!canEvolve && (
-        <div className="text-center text-sm text-slate-500 py-4">
-          Maximum evolution reached
-        </div>
-      )}
-
-      {evolution.lastEvolution && (
-        <footer className="text-center text-xs text-slate-500">
-          Last evolved: {new Date(evolution.lastEvolution).toLocaleString()}
-        </footer>
-      )}
+      <footer className="text-center text-xs text-zinc-500">
+        Age: {formatDuration(Date.now() - evolution.birthTime)}
+      </footer>
     </div>
   );
 }
 
-interface GenomeBarProps {
+interface RequirementBarProps {
   label: string;
   value: number;
+  helper: string;
   color: string;
 }
 
-function GenomeBar({ label, value, color }: GenomeBarProps) {
+function RequirementBar({ label, value, helper, color }: RequirementBarProps) {
+  const clampedValue = Math.min(1, Math.max(0, value));
+  const width = Math.round(clampedValue * 100);
+  const isMet = clampedValue >= 0.999;
+  const helperText = isMet && helper !== 'Met' && helper !== 'Ready' ? `Met • ${helper}` : helper;
+
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs text-slate-400">
+      <div className="flex justify-between text-zinc-400">
         <span>{label}</span>
-        <span className="text-slate-300 font-medium">{Math.round(value)}</span>
+        <span className={`text-zinc-300 font-medium ${isMet ? 'text-emerald-200' : ''}`}>
+          {isMet && helper === 'Met' ? 'Met' : helperText}
+        </span>
       </div>
-      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+      <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
         <div
           className="h-full transition-all duration-500"
           style={{
-            width: `${Math.min(100, value)}%`,
+            width: `${width}%`,
             backgroundColor: color,
           }}
         />
       </div>
     </div>
   );
+}
+
+type RequirementMode = 'time' | 'number';
+
+function formatRequirementValue(
+  current: number,
+  required: number,
+  mode: RequirementMode,
+  formatDuration?: (value: number) => string
+): string {
+  if (required <= 0) {
+    return 'Ready';
+  }
+
+  if (mode === 'time') {
+    const remaining = Math.max(0, required - current);
+    if (remaining === 0) {
+      return 'Met';
+    }
+    if (formatDuration) {
+      return `${formatDuration(remaining)} left`;
+    }
+    return `${Math.round(remaining / (1000 * 60))}m left`;
+  }
+
+  return `${Math.round(current)}/${required}`;
 }

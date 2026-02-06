@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useStore } from '@/store/guardian';
+import { useState } from 'react';
+import { useStore } from '@/lib/store';
 import { Trophy, Medal, Crown, Award } from 'lucide-react';
 import {
   ACHIEVEMENTS_CATALOG,
@@ -9,7 +9,7 @@ import {
   calculateTotalPoints,
   getAchievementsByCategory,
   type Achievement,
-} from '@/systems/achievements';
+} from '@/lib/achievements';
 
 const CATEGORY_ICONS = {
   care: '❤️',
@@ -40,33 +40,22 @@ export function AchievementsPanel() {
   const evolution = useStore(s => s.evolution);
   const battle = useStore(s => s.battle);
   const vimana = useStore(s => s.vimana);
-  const breeding = useStore(s => s.breeding);
-  const earned = useStore(s => s.achievements);
+
+  // Mock breeding state
+  const breeding = { offspringCount: 0 };
 
   // Update achievement progress
-  const achievements = useMemo(() => {
-    const base = updateAchievementProgress(ACHIEVEMENTS_CATALOG, {
-      vitals,
-      battle,
-      vimana: {
-        totalSamples: vimana.samplesCollected || 0,
-        anomaliesResolved: vimana.anomaliesResolved ?? 0,
-        cells: (vimana.cells || []).map(c => ({ explored: c.explored })),
-      },
-      evolution,
-      breeding,
-    });
-
-    const earnedMap = new Map(earned.map(a => [a.id, a.earnedAt]));
-    return base.map(a => {
-      if (!earnedMap.has(a.id)) return a;
-      return {
-        ...a,
-        unlocked: true,
-        unlockedAt: a.unlockedAt ?? earnedMap.get(a.id),
-      };
-    });
-  }, [vitals, battle, vimana, evolution, breeding, earned]);
+  const achievements = updateAchievementProgress(ACHIEVEMENTS_CATALOG, {
+    vitals,
+    battle,
+    vimana: {
+      totalSamples: vimana.scansPerformed || 0,
+      anomaliesResolved: vimana.anomaliesResolved ?? vimana.anomaliesFound ?? 0,
+      cells: (vimana.cells || []).map(c => ({ explored: Boolean('explored' in c ? c.explored : c.discovered) })),
+    },
+    evolution,
+    breeding,
+  });
 
   const filteredAchievements =
     selectedCategory === 'all'

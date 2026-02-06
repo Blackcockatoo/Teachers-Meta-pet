@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useStore } from '@/store/guardian';
+import { useState } from 'react';
+import { useStore } from '@/lib/store';
 import { Button } from './ui/button';
-import { Sparkles, Crown, Eye, Zap, Check, Minus } from 'lucide-react';
+import { Sparkles, Crown, Eye, Zap } from 'lucide-react';
 import {
   COSMETICS_CATALOG,
   getCosmeticsByCategory,
   checkUnlockConditions,
   type Cosmetic,
-} from '@/systems/cosmetics';
+} from '@/lib/cosmetics';
 
 const CATEGORY_ICONS = {
   accessory: Crown,
@@ -31,43 +31,27 @@ export function CosmeticsPanel() {
   const battle = useStore(s => s.battle);
   const vimana = useStore(s => s.vimana);
   const miniGames = useStore(s => s.miniGames);
-  const breeding = useStore(s => s.breeding);
-  const cosmeticsState = useStore(s => s.cosmetics);
-  const unlockCosmetic = useStore(s => s.unlockCosmetic);
-  const equipCosmetic = useStore(s => s.equipCosmetic);
-  const unequipCosmetic = useStore(s => s.unequipCosmetic);
 
-  const unlockedFromProgress = useMemo(
-    () =>
-      checkUnlockConditions({
-        evolution,
-        battle,
-        vimana: {
-          totalSamples: vimana.samplesCollected || 0,
-          anomaliesResolved: vimana.anomaliesResolved || 0,
-        },
-        miniGames,
-        breeding,
-      }),
-    [evolution, battle, vimana, miniGames, breeding]
-  );
+  // Mock breeding state (should be in store)
+  const breeding = { offspringCount: 0 };
 
-  useEffect(() => {
-    // Persist unlocks from progress so they survive reloads
-    unlockedFromProgress.forEach((id) => unlockCosmetic(id));
-  }, [unlockedFromProgress, unlockCosmetic]);
-
-  const unlockedIds = new Set([
-    ...unlockedFromProgress,
-    ...cosmeticsState.filter(c => c.unlocked !== false).map(c => c.id),
-  ]);
-
-  const equippedIds = new Set(cosmeticsState.filter(c => c.equipped).map(c => c.id));
+  const unlockedIds = checkUnlockConditions({
+    evolution,
+    battle,
+    vimana: {
+      ...vimana,
+      totalSamples: 0,
+      anomaliesResolved: vimana.anomaliesResolved || 0,
+    },
+    miniGames: {
+      totalPlays: 0,
+    },
+    breeding,
+  });
 
   const cosmetics = getCosmeticsByCategory(selectedCategory).map(cosmetic => ({
     ...cosmetic,
-    unlocked: unlockedIds.has(cosmetic.id),
-    equipped: equippedIds.has(cosmetic.id),
+    unlocked: unlockedIds.includes(cosmetic.id),
   }));
 
   const categories: Cosmetic['category'][] = ['accessory', 'aura', 'pattern', 'effect'];
@@ -86,7 +70,7 @@ export function CosmeticsPanel() {
         </div>
         <div className="text-xs text-zinc-400 text-right">
           <p>
-            Unlocked: <span className="text-emerald-300 font-semibold">{unlockedIds.size}</span>
+            Unlocked: <span className="text-emerald-300 font-semibold">{unlockedIds.length}</span>
             /{COSMETICS_CATALOG.length}
           </p>
         </div>
@@ -169,14 +153,8 @@ export function CosmeticsPanel() {
             {/* Equip Button */}
             {cosmetic.unlocked && (
               <div className="mt-3">
-                <Button
-                  size="sm"
-                  variant={cosmetic.equipped ? 'default' : 'outline'}
-                  className="w-full text-xs"
-                  onClick={() => (cosmetic.equipped ? unequipCosmetic(cosmetic.id) : equipCosmetic(cosmetic.id))}
-                >
-                  {cosmetic.equipped ? <Check className="w-4 h-4 mr-1" /> : <Minus className="w-4 h-4 mr-1" />}
-                  {cosmetic.equipped ? 'Equipped' : 'Equip'}
+                <Button size="sm" variant="outline" className="w-full text-xs">
+                  Equip
                 </Button>
               </div>
             )}

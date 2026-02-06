@@ -1,7 +1,7 @@
 'use client';
 
-import { ACHIEVEMENTS_CATALOG } from '@/systems/achievements';
-import { useStore } from '@/store/guardian';
+import { ACHIEVEMENT_CATALOG } from '@/lib/progression/types';
+import { useStore } from '@/lib/store';
 import { Trophy, Lock } from 'lucide-react';
 
 export function AchievementShelf() {
@@ -12,10 +12,10 @@ export function AchievementShelf() {
       <h2 className="text-xl font-bold text-white flex items-center gap-2">
         <Trophy className="w-5 h-5 text-amber-300" />
         Achievements
-        <span className="text-xs font-normal text-zinc-400">{achievements.length}/{ACHIEVEMENTS_CATALOG.length} unlocked</span>
+        <span className="text-xs font-normal text-zinc-400">{achievements.length}/{ACHIEVEMENT_CATALOG.length} unlocked</span>
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {ACHIEVEMENTS_CATALOG.map(item => {
+        {ACHIEVEMENT_CATALOG.map(item => {
           const earned = achievements.find(a => a.id === item.id);
           return (
             <div
@@ -29,7 +29,7 @@ export function AchievementShelf() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold text-white">
                   {earned ? <Trophy className="w-4 h-4 text-amber-300" /> : <Lock className="w-4 h-4 text-zinc-500" />}
-                  {item.name}
+                  {item.title}
                 </div>
                 <span className="text-xs text-zinc-500">{earned ? 'Unlocked' : 'Locked'}</span>
               </div>

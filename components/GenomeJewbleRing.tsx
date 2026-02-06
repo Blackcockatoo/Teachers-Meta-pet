@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo, useId } from 'react';
+import { memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { getResidue, getResidueMeta } from '@/lib/genome';
 
@@ -12,7 +12,6 @@ export interface GenomeJewbleRingProps {
   blueDigits: number[];
   showFrontier?: boolean;
   variant?: GenomeJewbleRingVariant;
-  className?: string;
 }
 
 interface PolarPoint {
@@ -26,12 +25,10 @@ export const GenomeJewbleRing = memo(function GenomeJewbleRing({
   blueDigits,
   showFrontier = true,
   variant = 'clarity',
-  className,
 }: GenomeJewbleRingProps) {
-  const reactId = useId();
   const gradientId = useMemo(
-    () => `jewbleGradient-${reactId.replace(/:/g, '')}`,
-    [reactId]
+    () => `jewbleGradient-${Math.random().toString(36).slice(2, 8)}`,
+    []
   );
   const size = variant === 'dial' ? 320 : 240;
   const center = size / 2;
@@ -56,13 +53,11 @@ export const GenomeJewbleRing = memo(function GenomeJewbleRing({
   const residueMeta = useMemo(() => Array.from({ length: 60 }, (_, index) => getResidueMeta(index)), []);
   const showLabels = variant === 'dial';
 
-  const round = (value: number) => Math.round(value * 1_000) / 1_000;
-
   const polar = (residue: number, radius: number): PolarPoint => {
     const theta = (residue / 60) * Math.PI * 2 - Math.PI / 2;
     return {
-      x: round(center + radius * Math.cos(theta)),
-      y: round(center + radius * Math.sin(theta)),
+      x: center + radius * Math.cos(theta),
+      y: center + radius * Math.sin(theta),
     };
   };
 
@@ -76,7 +71,7 @@ export const GenomeJewbleRing = memo(function GenomeJewbleRing({
   );
 
   return (
-    <div className={cn('relative', variant === 'dial' ? 'w-[320px]' : 'w-[240px]', className)}>
+    <div className={cn('relative mx-auto', variant === 'dial' ? 'max-w-[360px]' : 'max-w-[300px]')}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-[0_0_12px_rgba(0,0,0,0.35)]">
         {/* Backdrop */}
         <circle cx={center} cy={center} r={tickRadius + 8} fill={`url(#${gradientId})`} opacity={variant === 'dial' ? 0.16 : 0.1} />
@@ -188,12 +183,10 @@ export const GenomeJewbleRing = memo(function GenomeJewbleRing({
       {variant === 'dial' ? (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="px-4 py-2 rounded-full bg-slate-900/70 border border-slate-700 text-[11px] uppercase tracking-[0.2em] text-slate-200">
-            Genome Ring
+            Element Dial
           </div>
         </div>
       ) : null}
     </div>
   );
 });
-
-export default GenomeJewbleRing;

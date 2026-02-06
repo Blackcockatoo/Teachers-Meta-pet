@@ -1,19 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useStore } from "@/lib/store";
-import { HUD } from "@/components/HUD";
-import AuraliaMetaPet from "@/components/AuraliaMetaPet";
-import { PetSprite } from "@/components/PetSprite";
-import { Button } from "@/components/ui/button";
-import { PetResponseOverlay } from "@/components/PetResponseOverlay";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { useEffect } from 'react';
+import { useStore } from '@/lib/store';
+import { HUD } from '@/components/HUD';
+import AuraliaMetaPet from '@/components/AuraliaMetaPet';
+import { Button } from '@/components/ui/button';
+import { PetResponseOverlay } from '@/components/PetResponseOverlay';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function PetPage() {
-  const startTick = useStore((s) => s.startTick);
-  const stopTick = useStore((s) => s.stopTick);
-  const petType = useStore((s) => s.petType);
+  const startTick = useStore(s => s.startTick);
+  const stopTick = useStore(s => s.stopTick);
 
   useEffect(() => {
     startTick();
@@ -43,16 +41,8 @@ export default function PetPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <div className="w-full h-full max-w-4xl bg-slate-900/80 backdrop-blur-sm rounded-3xl border border-slate-700/50 shadow-2xl overflow-hidden flex flex-col">
           {/* Pet Display Area */}
-          <div className="flex-1 bg-gradient-to-br from-slate-900 via-purple-950/30 to-slate-900 relative flex items-center justify-center">
-            {petType === "auralia" ? (
-              <AuraliaMetaPet />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center p-8">
-                <div className="w-full max-w-2xl aspect-square">
-                  <PetSprite />
-                </div>
-              </div>
-            )}
+          <div className="flex-1 bg-gradient-to-br from-slate-900 via-purple-950/30 to-slate-900 relative">
+            <AuraliaMetaPet />
           </div>
 
           {/* Controls Bar */}

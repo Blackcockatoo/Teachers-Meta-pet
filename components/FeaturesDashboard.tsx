@@ -7,9 +7,8 @@ import { BattleArena } from './BattleArena';
 import { MiniGamesPanel } from './MiniGamesPanel';
 import { CosmeticsPanel } from './CosmeticsPanel';
 import { AchievementsPanel } from './AchievementsPanel';
-import { KeysPanel } from './KeysPanel';
 import { PatternRecognitionGame } from './PatternRecognitionGame';
-import { Map, Swords, Gamepad2, Sparkles, Trophy, Key } from 'lucide-react';
+import { Map, Swords, Gamepad2, Sparkles, Trophy } from 'lucide-react';
 
 export function FeaturesDashboard() {
   const [activeTab, setActiveTab] = useState('vimana');
@@ -17,14 +16,10 @@ export function FeaturesDashboard() {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="vimana" className="flex items-center gap-2">
             <Map className="w-4 h-4" />
             <span className="hidden sm:inline">Explore</span>
-          </TabsTrigger>
-          <TabsTrigger value="keys" className="flex items-center gap-2">
-            <Key className="w-4 h-4" />
-            <span className="hidden sm:inline">Keys</span>
           </TabsTrigger>
           <TabsTrigger value="battle" className="flex items-center gap-2">
             <Swords className="w-4 h-4" />
@@ -47,12 +42,6 @@ export function FeaturesDashboard() {
         <TabsContent value="vimana" className="mt-0">
           <div className="bg-zinc-900/80 backdrop-blur rounded-xl p-6 border border-zinc-800">
             <VimanaMap />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="keys" className="mt-0">
-          <div className="bg-zinc-900/80 backdrop-blur rounded-xl p-6 border border-zinc-800">
-            <KeysPanel />
           </div>
         </TabsContent>
 

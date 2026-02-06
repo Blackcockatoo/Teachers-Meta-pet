@@ -1,42 +1,31 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useStore } from "@/lib/store";
-import { HUD } from "@/components/HUD";
-import { HeptaTag } from "@/components/HeptaTag";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useStore } from '@/lib/store';
+import { HUD } from '@/components/HUD';
+import { HeptaTag } from '@/components/HeptaTag';
+import { Button } from '@/components/ui/button';
 import {
   getDeviceHmacKey,
   mintPrimeTailId,
-  verifyCrest,
-} from "@/lib/identity/crest";
+  verifyCrest
+} from '@/lib/identity/crest';
 import {
   heptaEncode42,
   heptaDecode42,
   playHepta,
-  stopHepta,
-} from "@/lib/identity/hepta";
+  stopHepta
+} from '@/lib/identity/hepta';
 import type {
   PrimeTailId,
   HeptaPayload,
   HeptaDigits,
   Vault,
   Rotation,
-  PrivacyPreset,
-} from "@/lib/identity/types";
-import type { MirrorOutcome } from "@/lib/store";
-import {
-  Play,
-  Volume2,
-  VolumeX,
-  RefreshCw,
-  Shield,
-  Info,
-  Sparkles,
-  Clock3,
-  HeartHandshake,
-  Hash,
-} from "lucide-react";
+  PrivacyPreset
+} from '@/lib/identity/types';
+import type { MirrorOutcome } from '@/lib/store';
+import { Play, Volume2, VolumeX, RefreshCw, Shield, Info, Sparkles, Clock3, HeartHandshake, Hash } from 'lucide-react';
 
 /**
  * Mock Mode Configuration
@@ -73,13 +62,13 @@ const SAFETY_RAILS = {
  * - Mock mode with safety rails
  */
 export default function ScaffoldPage() {
-  const startTick = useStore((s) => s.startTick);
-  const stopTick = useStore((s) => s.stopTick);
-  const mirrorMode = useStore((s) => s.mirrorMode);
-  const beginMirrorMode = useStore((s) => s.beginMirrorMode);
-  const confirmMirrorCross = useStore((s) => s.confirmMirrorCross);
-  const completeMirrorMode = useStore((s) => s.completeMirrorMode);
-  const refreshConsent = useStore((s) => s.refreshConsent);
+  const startTick = useStore(s => s.startTick);
+  const stopTick = useStore(s => s.stopTick);
+  const mirrorMode = useStore(s => s.mirrorMode);
+  const beginMirrorMode = useStore(s => s.beginMirrorMode);
+  const confirmMirrorCross = useStore(s => s.confirmMirrorCross);
+  const completeMirrorMode = useStore(s => s.completeMirrorMode);
+  const refreshConsent = useStore(s => s.refreshConsent);
 
   const [mockConfig, setMockConfig] = useState<MockConfig>(DEFAULT_MOCK_CONFIG);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -87,91 +76,85 @@ export default function ScaffoldPage() {
   const [hmacKey, setHmacKey] = useState<CryptoKey | null>(null);
   const [primeTailId, setPrimeTailId] = useState<PrimeTailId | null>(null);
   const [heptaCode, setHeptaCode] = useState<HeptaDigits | null>(null);
-  const [ritualPreset, setRitualPreset] = useState<PrivacyPreset>("standard");
-  const [ritualNote, setRitualNote] = useState("");
-  const [ritualOutcome, setRitualOutcome] = useState<MirrorOutcome>("anchor");
+   const [ritualPreset, setRitualPreset] = useState<PrivacyPreset>('standard');
+   const [ritualNote, setRitualNote] = useState('');
+   const [ritualOutcome, setRitualOutcome] = useState<MirrorOutcome>('anchor');
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const generateMockDNA = useCallback((): string => {
-    const chars = "ACTG0123456789abcdef";
-    let dna = "";
+    const chars = 'ACTG0123456789abcdef';
+    let dna = '';
     for (let i = 0; i < SAFETY_RAILS.MOCK_DNA_LENGTH; i++) {
       dna += chars[Math.floor(Math.random() * chars.length)];
     }
     return dna;
   }, []);
 
-  const generateTail = useCallback(
-    (): [number, number, number, number] => [
-      Math.floor(Math.random() * 60),
-      Math.floor(Math.random() * 60),
-      Math.floor(Math.random() * 60),
-      Math.floor(Math.random() * 60),
-    ],
-    [],
-  );
+  const generateTail = useCallback((): [number, number, number, number] => [
+    Math.floor(Math.random() * 60),
+    Math.floor(Math.random() * 60),
+    Math.floor(Math.random() * 60),
+    Math.floor(Math.random() * 60),
+  ], []);
 
-  const mintNewIdentity = useCallback(
-    async (key: CryptoKey) => {
-      try {
-        setError(null);
+  const mintNewIdentity = useCallback(async (key: CryptoKey) => {
+    try {
+      setError(null);
 
-        // Generate mock DNA
-        const dna = generateMockDNA();
+      // Generate mock DNA
+      const dna = generateMockDNA();
 
-        // Random vault and rotation
-        const vaults: Vault[] = ["red", "blue", "black"];
-        const rotations: Rotation[] = ["CW", "CCW"];
-        const vault = vaults[Math.floor(Math.random() * vaults.length)];
-        const rotation =
-          rotations[Math.floor(Math.random() * rotations.length)];
-        const tail = generateTail();
+      // Random vault and rotation
+      const vaults: Vault[] = ['red', 'blue', 'black'];
+      const rotations: Rotation[] = ['CW', 'CCW'];
+      const vault = vaults[Math.floor(Math.random() * vaults.length)];
+      const rotation = rotations[Math.floor(Math.random() * rotations.length)];
+      const tail = generateTail();
 
-        // Mint PrimeTailId
-        const crest = await mintPrimeTailId({
-          dna,
-          vault,
-          rotation,
-          tail,
-          hmacKey: key,
-        });
+      // Mint PrimeTailId
+      const crest = await mintPrimeTailId({
+        dna,
+        vault,
+        rotation,
+        tail,
+        hmacKey: key,
+      });
 
-        setPrimeTailId(crest);
+      setPrimeTailId(crest);
 
-        // Verify crest immediately
-        const verified = await verifyCrest(crest, key);
-        setIsVerified(verified);
+      // Verify crest immediately
+      const verified = await verifyCrest(crest, key);
+      setIsVerified(verified);
 
-        // Generate HeptaCode
-        const presets: PrivacyPreset[] = ["stealth", "standard", "radiant"];
-        const preset = presets[Math.floor(Math.random() * presets.length)];
+      // Generate HeptaCode
+      const presets: PrivacyPreset[] = ['stealth', 'standard', 'radiant'];
+      const preset = presets[Math.floor(Math.random() * presets.length)];
 
-        const payload: HeptaPayload = {
-          version: 1,
-          preset,
-          vault: crest.vault,
-          rotation: crest.rotation,
-          tail: crest.tail,
-          epoch13: Math.floor((Date.now() / 60000) % 8192), // minutes mod 8192
-          nonce14: Math.floor(Math.random() * 16384), // 14-bit random
-        };
+      const payload: HeptaPayload = {
+        version: 1,
+        preset,
+        vault: crest.vault,
+        rotation: crest.rotation,
+        tail: crest.tail,
+        epoch13: Math.floor((Date.now() / 60000) % 8192), // minutes mod 8192
+        nonce14: Math.floor(Math.random() * 16384), // 14-bit random
+      };
 
-        const digits = await heptaEncode42(payload, key);
-        setRitualPreset(preset);
-        setHeptaCode(digits);
+      const digits = await heptaEncode42(payload, key);
+      setRitualPreset(preset);
+      setHeptaCode(digits);
 
-        // Verify decode
-        const decoded = await heptaDecode42(digits, key);
-        if (!decoded) {
-          setError("HeptaCode decode verification failed");
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Minting failed");
+      // Verify decode
+      const decoded = await heptaDecode42(digits, key);
+      if (!decoded) {
+        setError('HeptaCode decode verification failed');
       }
-    },
-    [generateMockDNA, generateTail],
-  );
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Minting failed');
+    }
+  }, [generateMockDNA, generateTail]);
 
   const handlePlayChime = useCallback(async () => {
     if (!heptaCode || isAudioPlaying) return;
@@ -195,7 +178,7 @@ export default function ScaffoldPage() {
       clearTimeout(timeout);
       setIsAudioPlaying(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Audio playback failed");
+      setError(err instanceof Error ? err.message : 'Audio playback failed');
       setIsAudioPlaying(false);
     }
   }, [heptaCode, isAudioPlaying]);
@@ -218,7 +201,7 @@ export default function ScaffoldPage() {
 
         setIsInitialized(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Initialization failed");
+        setError(err instanceof Error ? err.message : 'Initialization failed');
       }
     }
 
@@ -266,7 +249,7 @@ export default function ScaffoldPage() {
 
   const handleCompleteRitual = useCallback(() => {
     completeMirrorMode(ritualOutcome, ritualNote.trim() || undefined);
-    setRitualNote("");
+    setRitualNote('');
   }, [completeMirrorMode, ritualOutcome, ritualNote]);
 
   const consentRemainingMinutes = useMemo(() => {
@@ -300,7 +283,7 @@ export default function ScaffoldPage() {
    * Format tail for display
    */
   function formatTail(tail: [number, number, number, number]): string {
-    return tail.map((n) => n.toString(60).toUpperCase()).join("-");
+    return tail.map(n => n.toString(60).toUpperCase()).join('-');
   }
 
   if (!isInitialized) {
@@ -323,8 +306,7 @@ export default function ScaffoldPage() {
             PrimeTailId × HeptaCode v1
           </h1>
           <p className="text-zinc-400">
-            Complete scaffold with identity minting, ECC, MAC, visuals, chime &
-            real-time vitals
+            Complete scaffold with identity minting, ECC, MAC, visuals, chime & real-time vitals
           </p>
         </div>
 
@@ -340,21 +322,11 @@ export default function ScaffoldPage() {
           <div className="flex items-start gap-3">
             <Shield className="w-5 h-5 text-cyan-400 mt-0.5" />
             <div className="flex-1">
-              <h3 className="font-semibold text-cyan-300 mb-2">
-                Safety Rails Active
-              </h3>
+              <h3 className="font-semibold text-cyan-300 mb-2">Safety Rails Active</h3>
               <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400">
-                <div>
-                  Max Audio: {SAFETY_RAILS.MAX_AUDIO_DURATION_MS / 1000}s
-                </div>
-                <div>
-                  Tick Range: {SAFETY_RAILS.MIN_TICK_INTERVAL_MS}-
-                  {SAFETY_RAILS.MAX_TICK_INTERVAL_MS}ms
-                </div>
-                <div>
-                  Vitals Range: {SAFETY_RAILS.VITALS_MIN}-
-                  {SAFETY_RAILS.VITALS_MAX}
-                </div>
+                <div>Max Audio: {SAFETY_RAILS.MAX_AUDIO_DURATION_MS / 1000}s</div>
+                <div>Tick Range: {SAFETY_RAILS.MIN_TICK_INTERVAL_MS}-{SAFETY_RAILS.MAX_TICK_INTERVAL_MS}ms</div>
+                <div>Vitals Range: {SAFETY_RAILS.VITALS_MIN}-{SAFETY_RAILS.VITALS_MAX}</div>
                 <div>Mock DNA: {SAFETY_RAILS.MOCK_DNA_LENGTH} chars</div>
               </div>
             </div>
@@ -369,15 +341,13 @@ export default function ScaffoldPage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">PrimeTailId Crest</h2>
                 {isVerified !== null && (
-                  <div
-                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
-                      isVerified
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                    isVerified
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
+                  }`}>
                     <Shield className="w-3 h-3" />
-                    {isVerified ? "Verified" : "Invalid"}
+                    {isVerified ? 'Verified' : 'Invalid'}
                   </div>
                 )}
               </div>
@@ -385,10 +355,7 @@ export default function ScaffoldPage() {
               {primeTailId ? (
                 <div className="space-y-3 text-sm">
                   <div className="grid grid-cols-2 gap-3">
-                    <InfoItem
-                      label="Vault"
-                      value={primeTailId.vault.toUpperCase()}
-                    />
+                    <InfoItem label="Vault" value={primeTailId.vault.toUpperCase()} />
                     <InfoItem label="Rotation" value={primeTailId.rotation} />
                   </div>
                   <InfoItem label="Tail" value={formatTail(primeTailId.tail)} />
@@ -439,7 +406,7 @@ export default function ScaffoldPage() {
 
                 <div className="bg-zinc-900/50 rounded-lg p-3 mb-4">
                   <div className="font-mono text-xs text-zinc-400 break-all">
-                    {Array.from(heptaCode).join("")}
+                    {Array.from(heptaCode).join('')}
                   </div>
                 </div>
 
@@ -451,13 +418,9 @@ export default function ScaffoldPage() {
                     variant="secondary"
                   >
                     {isAudioPlaying ? (
-                      <>
-                        <Volume2 className="w-4 h-4 animate-pulse" /> Playing...
-                      </>
+                      <><Volume2 className="w-4 h-4 animate-pulse" /> Playing...</>
                     ) : (
-                      <>
-                        <Play className="w-4 h-4" /> Play Chime
-                      </>
+                      <><Play className="w-4 h-4" /> Play Chime</>
                     )}
                   </Button>
 
@@ -481,22 +444,18 @@ export default function ScaffoldPage() {
                   <Sparkles className="w-5 h-5 text-purple-300" />
                   <div>
                     <h2 className="text-xl font-bold">Threshold Ritual</h2>
-                    <p className="text-xs text-zinc-400">
-                      Bridge reality ↔ meta with consent
-                    </p>
+                    <p className="text-xs text-zinc-400">Bridge reality ↔ meta with consent</p>
                   </div>
                 </div>
-                <div
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    mirrorMode.phase === "crossed"
-                      ? "border-emerald-400 text-emerald-300"
-                      : mirrorMode.phase === "entering"
-                        ? "border-amber-300 text-amber-200"
-                        : mirrorMode.phase === "returning"
-                          ? "border-cyan-300 text-cyan-200"
-                          : "border-zinc-500 text-zinc-300"
-                  }`}
-                >
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                  mirrorMode.phase === 'crossed'
+                    ? 'border-emerald-400 text-emerald-300'
+                    : mirrorMode.phase === 'entering'
+                      ? 'border-amber-300 text-amber-200'
+                      : mirrorMode.phase === 'returning'
+                        ? 'border-cyan-300 text-cyan-200'
+                        : 'border-zinc-500 text-zinc-300'
+                }`}>
                   {mirrorMode.phase.toUpperCase()}
                 </div>
               </div>
@@ -506,9 +465,7 @@ export default function ScaffoldPage() {
                   <div className="mb-1 text-zinc-400">Privacy Preset</div>
                   <select
                     value={ritualPreset}
-                    onChange={(event) =>
-                      setRitualPreset(event.target.value as PrivacyPreset)
-                    }
+                    onChange={event => setRitualPreset(event.target.value as PrivacyPreset)}
                     className="w-full bg-zinc-900/60 border border-purple-500/30 rounded-lg px-3 py-2 text-sm"
                   >
                     <option value="stealth">Stealth • keeps crest local</option>
@@ -521,16 +478,14 @@ export default function ScaffoldPage() {
                     <Clock3 className="w-4 h-4 text-cyan-300" />
                     <span className="text-zinc-400">Consent</span>
                     <span className="font-mono text-zinc-100">
-                      {consentRemainingMinutes !== null
-                        ? `${consentRemainingMinutes}m`
-                        : "—"}
+                      {consentRemainingMinutes !== null ? `${consentRemainingMinutes}m` : '—'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Hash className="w-4 h-4 text-purple-300" />
                     <span className="text-zinc-400">Presence Token</span>
                     <span className="font-mono text-[11px] text-zinc-100 truncate">
-                      {mirrorMode.presenceToken ?? "—"}
+                      {mirrorMode.presenceToken ?? '—'}
                     </span>
                   </div>
                 </div>
@@ -539,10 +494,7 @@ export default function ScaffoldPage() {
               <div className="flex flex-wrap gap-2">
                 <Button
                   onClick={handleBeginRitual}
-                  disabled={
-                    mirrorMode.phase !== "idle" &&
-                    mirrorMode.phase !== "returning"
-                  }
+                  disabled={mirrorMode.phase !== 'idle' && mirrorMode.phase !== 'returning'}
                   className="gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
@@ -550,7 +502,7 @@ export default function ScaffoldPage() {
                 </Button>
                 <Button
                   onClick={handleCrossThreshold}
-                  disabled={mirrorMode.phase !== "entering"}
+                  disabled={mirrorMode.phase !== 'entering'}
                   variant="secondary"
                   className="gap-2"
                 >
@@ -568,12 +520,10 @@ export default function ScaffoldPage() {
               </div>
 
               <div>
-                <label className="text-xs text-zinc-400 mb-1 block">
-                  Reflection Note
-                </label>
+                <label className="text-xs text-zinc-400 mb-1 block">Reflection Note</label>
                 <textarea
                   value={ritualNote}
-                  onChange={(event) => setRitualNote(event.target.value)}
+                  onChange={event => setRitualNote(event.target.value)}
                   rows={3}
                   className="w-full bg-zinc-900/70 border border-purple-500/30 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                   placeholder="What shifted when you crossed?"
@@ -583,8 +533,8 @@ export default function ScaffoldPage() {
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
-                  variant={ritualOutcome === "anchor" ? "default" : "outline"}
-                  onClick={() => setRitualOutcome("anchor")}
+                  variant={ritualOutcome === 'anchor' ? 'default' : 'outline'}
+                  onClick={() => setRitualOutcome('anchor')}
                   className="gap-1"
                 >
                   <Shield className="w-4 h-4" />
@@ -592,8 +542,8 @@ export default function ScaffoldPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant={ritualOutcome === "drift" ? "default" : "outline"}
-                  onClick={() => setRitualOutcome("drift")}
+                  variant={ritualOutcome === 'drift' ? 'default' : 'outline'}
+                  onClick={() => setRitualOutcome('drift')}
                   className="gap-1"
                 >
                   <VolumeX className="w-4 h-4" />
@@ -601,7 +551,7 @@ export default function ScaffoldPage() {
                 </Button>
                 <Button
                   onClick={handleCompleteRitual}
-                  disabled={mirrorMode.phase === "idle"}
+                  disabled={mirrorMode.phase === 'idle'}
                   variant="secondary"
                   className="gap-2"
                 >
@@ -614,27 +564,19 @@ export default function ScaffoldPage() {
                 <div className="border border-purple-500/30 rounded-lg p-3 bg-zinc-900/60">
                   <div className="flex items-center justify-between text-sm text-zinc-200">
                     <span className="font-semibold">
-                      {mirrorMode.lastReflection.outcome === "anchor"
-                        ? "Anchored"
-                        : "Drifted"}{" "}
-                      • {mirrorMode.lastReflection.preset.toUpperCase()}
+                      {mirrorMode.lastReflection.outcome === 'anchor' ? 'Anchored' : 'Drifted'} •{' '}
+                      {mirrorMode.lastReflection.preset.toUpperCase()}
                     </span>
                     <span className="text-xs text-zinc-400">
-                      {new Date(
-                        mirrorMode.lastReflection.timestamp,
-                      ).toLocaleTimeString()}
+                      {new Date(mirrorMode.lastReflection.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
                   {mirrorMode.lastReflection.note && (
-                    <p className="text-xs text-zinc-300 mt-2">
-                      {mirrorMode.lastReflection.note}
-                    </p>
+                    <p className="text-xs text-zinc-300 mt-2">{mirrorMode.lastReflection.note}</p>
                   )}
                   <div className="text-xs text-zinc-400 mt-2">
-                    Mood {mirrorMode.lastReflection.moodDelta >= 0 ? "+" : ""}
-                    {mirrorMode.lastReflection.moodDelta} / Energy{" "}
-                    {mirrorMode.lastReflection.energyDelta >= 0 ? "+" : ""}
-                    {mirrorMode.lastReflection.energyDelta}
+                    Mood {mirrorMode.lastReflection.moodDelta >= 0 ? '+' : ''}{mirrorMode.lastReflection.moodDelta} /
+                    Energy {mirrorMode.lastReflection.energyDelta >= 0 ? '+' : ''}{mirrorMode.lastReflection.energyDelta}
                   </div>
                 </div>
               )}
@@ -654,19 +596,14 @@ export default function ScaffoldPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-zinc-300">Mock Mode</span>
                   <button
-                    onClick={() =>
-                      setMockConfig({
-                        ...mockConfig,
-                        enabled: !mockConfig.enabled,
-                      })
-                    }
+                    onClick={() => setMockConfig({ ...mockConfig, enabled: !mockConfig.enabled })}
                     className={`relative w-11 h-6 rounded-full transition-colors ${
-                      mockConfig.enabled ? "bg-cyan-500" : "bg-zinc-600"
+                      mockConfig.enabled ? 'bg-cyan-500' : 'bg-zinc-600'
                     }`}
                   >
                     <span
                       className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                        mockConfig.enabled ? "translate-x-5" : "translate-x-0"
+                        mockConfig.enabled ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
                   </button>
@@ -675,20 +612,15 @@ export default function ScaffoldPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-zinc-300">Auto-play Chime</span>
                   <button
-                    onClick={() =>
-                      setMockConfig({
-                        ...mockConfig,
-                        autoPlay: !mockConfig.autoPlay,
-                      })
-                    }
+                    onClick={() => setMockConfig({ ...mockConfig, autoPlay: !mockConfig.autoPlay })}
                     className={`relative w-11 h-6 rounded-full transition-colors ${
-                      mockConfig.autoPlay ? "bg-cyan-500" : "bg-zinc-600"
+                      mockConfig.autoPlay ? 'bg-cyan-500' : 'bg-zinc-600'
                     }`}
                     disabled={!mockConfig.enabled}
                   >
                     <span
                       className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                        mockConfig.autoPlay ? "translate-x-5" : "translate-x-0"
+                        mockConfig.autoPlay ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
                   </button>
@@ -699,15 +631,13 @@ export default function ScaffoldPage() {
                   <button
                     onClick={toggleVitalsDecay}
                     className={`relative w-11 h-6 rounded-full transition-colors ${
-                      mockConfig.mockVitalsDecay ? "bg-cyan-500" : "bg-zinc-600"
+                      mockConfig.mockVitalsDecay ? 'bg-cyan-500' : 'bg-zinc-600'
                     }`}
                     disabled={!mockConfig.enabled}
                   >
                     <span
                       className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                        mockConfig.mockVitalsDecay
-                          ? "translate-x-5"
-                          : "translate-x-0"
+                        mockConfig.mockVitalsDecay ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
                   </button>
@@ -722,10 +652,7 @@ export default function ScaffoldPage() {
 
               <div className="mt-4 pt-4 border-t border-zinc-700">
                 <div className="grid grid-cols-2 gap-2 text-xs text-zinc-500">
-                  <div>
-                    Tick Status:{" "}
-                    {mockConfig.mockVitalsDecay ? "✓ Active" : "⏸ Paused"}
-                  </div>
+                  <div>Tick Status: {mockConfig.mockVitalsDecay ? '✓ Active' : '⏸ Paused'}</div>
                   <div>Zustand Store: ✓ Wired</div>
                   <div>Auto-save: ✓ Enabled</div>
                   <div>Persistence: IndexedDB</div>
@@ -735,9 +662,7 @@ export default function ScaffoldPage() {
 
             {/* Architecture Info */}
             <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 backdrop-blur border border-purple-500/30 rounded-2xl p-6">
-              <h3 className="font-semibold text-purple-300 mb-3">
-                Architecture
-              </h3>
+              <h3 className="font-semibold text-purple-300 mb-3">Architecture</h3>
               <ul className="space-y-2 text-xs text-zinc-400">
                 <li>✓ PrimeTailId: HMAC-SHA256 identity signing</li>
                 <li>✓ HeptaCode v1: 42-digit base-7 with ECC (6×7 blocks)</li>

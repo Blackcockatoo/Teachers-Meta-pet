@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import MetaPetVisualizer from "@/components/MetaPetVisualizer";
+import MetaPetVisualizer from '@/components/MetaPetVisualizer';
 
 const VisualizerPage = () => {
   return <MetaPetVisualizer />;

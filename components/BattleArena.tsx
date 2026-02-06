@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/store/guardian';
+import { useStore } from '@/lib/store';
 import { Button } from './ui/button';
 import { Swords, ShieldHalf, Sparkles } from 'lucide-react';
 
@@ -14,8 +14,7 @@ function pickOpponent(): string {
 export function BattleArena() {
   const battle = useStore(s => s.battle);
   const vitals = useStore(s => s.vitals);
-  const recordBattleWin = useStore(s => s.recordBattleWin);
-  const recordBattleLoss = useStore(s => s.recordBattleLoss);
+  const recordBattle = useStore(s => s.recordBattle);
 
   const [lastSummary, setLastSummary] = useState<string>('No battles yet.');
 
@@ -24,13 +23,13 @@ export function BattleArena() {
     const vitalityFactor = (vitals.energy + vitals.mood) / 200;
     const shieldFactor = battle.energyShield / 150;
     const winChance = Math.min(0.85, 0.35 + vitalityFactor + shieldFactor);
-    const result = Math.random() < winChance;
+    const result = Math.random() < winChance ? 'win' : 'loss';
 
-    if (result) {
-      recordBattleWin();
+    recordBattle(result, opponent);
+
+    if (result === 'win') {
       setLastSummary(`Victory! ${opponent} yielded to your pet's calm aura.`);
     } else {
-      recordBattleLoss();
       setLastSummary(`Defeat. ${opponent} overpowered the resonance—rest and try again.`);
     }
   };
