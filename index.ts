@@ -1,10 +1,28 @@
-import { createMetaPetWebStore, type MetaPetState } from "@metapet/core/store";
+/**
+ * Astrogenetics Module
+ * Cosmic birth charts and meta-horoscope system
+ */
 
-export type { MetaPetState };
-export { createMetaPetWebStore } from "@metapet/core/store";
-export type { Vitals } from "@metapet/core/vitals";
-
-export const useStore = createMetaPetWebStore();
-
-// Element number theory exports
-export * from "./elements";
+export * from "./types";
+export {
+  lucasMod60,
+  getSlice,
+  daysSince,
+  planetAngle,
+  planetModifier,
+  getGate,
+  decodeRedTraits,
+  decodeBlueTraits,
+  decodeBlackTraits,
+  calculatePlanetaryPositions,
+  generateBirthChart,
+  generateHoroscope,
+  calculateGRS,
+  xorSequences,
+  ninesComplement,
+  rotateSequence,
+  simulateBreeding,
+  getFortuneColor,
+  getGRSStatusColor,
+  formatPlanetaryModifier,
+} from "./engine";
